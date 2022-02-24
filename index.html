@@ -51,15 +51,13 @@
                 var html = '';
                 options.forEach(function(item) {
                     html += `<div data-vl="${item.value}" data-text="${item.text}" class="select-item">
-                    <div class="text">${item.text}</div>
-                    <div class="radio">`;
+                    <div class="text">${item.text}</div>`;                    
                     if (self.val() == item.value) {
-                        html += `<input type="radio" name="select-option" checked>`;   
+                        html += `<div class="radio checked"><div><span></span></div></div>`;
                     } else {
-                        html += `<input type="radio" name="select-option">`;
+                        html += `<div class="radio"><div><span></span></div></div>`;
                     }
-                    html += `</div>
-                </div>`;
+                    html += `</div>`;
                 });
                 $('#select_popup_modal .modal-content').html(html);
                 
@@ -179,6 +177,30 @@
             justify-content: space-between;
             cursor: pointer;
             padding: 0 10px;
+        }
+        .select-item .radio div {
+            width: 18px;
+            height: 18px;
+            background: white;
+            border: 2px solid gray;
+            border-radius: 50%;
+            position: relative;
+        }
+        .select-item .radio div span {
+            display: none;
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: blue;
+            top: 3px;
+            left: 3px;
+            border-radius: 50%;
+        }
+        .select-item .radio.checked div {
+            border-color: blue;
+        }
+        .select-item .radio.checked div span {
+            display: block;
         }
         .select-item:last-child {
             border-bottom: none;
