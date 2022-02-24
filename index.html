@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.3/css/bootstrap-grid.min.css">
+    <script type="text/javascript">
+        function hideSelectModal() {
+            $('#select_popup_modal').hide();
+            $('body').removeClass('modal-open');
+            $('.modal-backdrop').hide();
+        }
+        
+        $.fn.customSelectionPopup = function () {
+            var selected = {value: '', text: ''};
+            var value = this.val();
+            if (value) {
+                selected.value = value;
+                this.find('option').each(function() {
+                    if ($(this).attr('value') == value) {
+                        selected.text = $(this).html();        
+                    }
+                })    
+            } else {
+                selected.text = this.find('option:first').html();
+            }
+            console.log('selected', selected)
+            var listOption = [];
+            this.find('option').each(function() {
+                let optionValue = $(this).attr('value');
+                let optionText = $(this).html();
+                if (optionValue) {
+                    listOption.push({value: optionValue, text: optionText});
+                }
+            })
+            let str = escape(JSON.stringify(listOption));
+            this.parent().append(`<input class="select-mask text-select" data-option="${str}" type="text" placeholder="${selected.text}" readonly>`);
+            this.hide();
+            
+            var self = this;
+
+            this.parent().find('.select-mask').click(function() {
+                var selectMark = $(this);
+                var options = unescape($(this).data('option'));
+                options = JSON.parse(options)
+                
+                //make select item
+                var html = '';
+                options.forEach(function(item) {
+                    html += `<div data-vl="${item.value}" data-text="${item.text}" class="select-item">
+                    <div class="text">${item.text}</div>
+                    <div class="radio">`;
+                    if (self.val() == item.value) {
+                        html += `<input type="radio" name="select-option" checked>`;   
+                    } else {
+                        html += `<input type="radio" name="select-option">`;
+                    }
+                    html += `</div>
+                </div>`;
+                });
+                $('#select_popup_modal .modal-content').html(html);
+                
+                setTimeout(function () {
+                    $('#select_popup_modal .select-item').click(function() {
+                        self.val($(this).data('vl'));
+                        selectMark.attr('placeholder', $(this).data('text'));
+                        hideSelectModal();
+                    })
+                }, 300);
+
+                let height = window.innerHeight * 0.95;
+                let totalItemHeight = 50 * options.length;
+                if (totalItemHeight < height) {
+                    height = totalItemHeight;
+                }
+
+                $('#select_popup_modal .modal-dialog').css({
+                    width: window.innerWidth * 0.95,
+                    height: height
+                })
+
+                //show modal
+                $('#select_popup_modal').show();
+                $('body').addClass('modal-open');
+                $('.modal-backdrop').show();
+            });
+            
+        };
+        
+        $.fn.selectionPopup = function() {
+            this.each(function() {
+                $(this).customSelectionPopup();
+            })
+        };
+        
+        $(function (){
+            $('.custom-selection').selectionPopup();
+
+            $(window).mouseup(function(e)
+            {
+                var container = $(".modal-dialog");
+
+                // if the target of the click isn't the container nor a descendant of the container
+                if (!container.is(e.target) && container.has(e.target).length === 0)
+                {
+                    //show modal
+                    hideSelectModal();
+                }
+            });
+            
+            
+            $('.btn-submit').click(function() {
+                var prefectures = $('#prefectures').val();
+                var cityDepartment = $('#cityDepartment').val();
+                alert('prefectures: ' + prefectures + '  --- cityDepartment: ' + cityDepartment);
+            })
+        })
+    </script>
+    <style type="text/css">
+        .text-select {
+            width: 100%;
+            height: 40px;
+            border-radius: 5px;
+            outline: none;
+            padding: 9px 15px;
+            background: white;
+            border: 1px solid #d0cfce;
+            background-image: url("data:image/svg+xml;utf8,<svg fill='gray' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+            background-repeat: no-repeat;
+            background-position-x: 100%;
+            background-position-y: 7px;
+        }
+        body.modal-open {
+            overflow: hidden;
+        }
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 1040;
+            background-color: black;
+            opacity: .5;
+            display: none;
+        }
+        
+        .select-modal {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 1050;
+            outline: 0;
+            display: none;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        .modal-dialog {
+            background: white;
+            position: absolute;
+            float: left;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 10px;
+            overflow-y: auto;
+        }
+        .select-item {
+            display: flex;
+            height: 50px;
+            border-bottom: 1px solid rgba(128, 128, 128, 0.53);
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            padding: 0 10px;
+        }
+        .select-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <strong>都道府県</strong>
+            <select class="custom-selection" name="prefectures" id="prefectures" required="" style="color: rgb(208, 207, 206);">
+                <option value="" hidden="" selected>選択してください</option>
+                <option value="01">北海道</option>
+                <option value="02">青森県</option>
+                <option value="03">岩手県</option>
+                <option value="04">宮城県</option>
+            </select>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <strong>市区部</strong>
+            <select class="custom-selection" name="cityDepartment" id="cityDepartment" required="" style="color: rgb(208, 207, 206);">
+                <option value="" disabled="" selected="" hidden="">選択してください</option>
+                <option value="201">青森市</option>
+                <option value="202">弘前市</option>
+                <option value="203">八戸市</option>
+                <option value="204">黒石市</option>
+                <option value="205">五所川原市</option>
+                <option value="206">十和田市</option>
+                <option value="207">三沢市</option>
+                <option value="208">むつ市</option>
+                <option value="209">つがる市</option>
+                <option value="210">平川市</option>
+                <option value="301">東津軽郡　平内町</option>
+                <option value="302">東津軽郡　蟹田町</option>
+                <option value="303">東津軽郡　今別町</option>
+                <option value="304">東津軽郡　蓬田村</option>
+                <option value="305">東津軽郡　平舘村</option>
+                <option value="306">東津軽郡　三厩村</option>
+                <option value="307">東津軽郡　外ヶ浜町</option>
+                <option value="321">西津軽郡　鰺ヶ沢町</option>
+                <option value="322">西津軽郡　木造町</option>
+                <option value="323">西津軽郡　深浦町</option>
+                <option value="324">西津軽郡　森田村</option>
+                <option value="325">西津軽郡　岩崎村</option>
+                <option value="326">西津軽郡　柏村</option>
+                <option value="327">西津軽郡　稲垣村</option>
+                <option value="328">西津軽郡　車力村</option>
+                <option value="341">中津軽郡　岩木町</option>
+                <option value="342">中津軽郡　相馬村</option>
+                <option value="343">中津軽郡　西目屋村</option>
+                <option value="361">南津軽郡　藤崎町</option>
+                <option value="362">南津軽郡　大鰐町</option>
+                <option value="363">南津軽郡　尾上町</option>
+                <option value="364">南津軽郡　浪岡町</option>
+                <option value="365">南津軽郡　平賀町</option>
+                <option value="366">南津軽郡　常盤村</option>
+                <option value="367">南津軽郡　田舎館村</option>
+                <option value="368">南津軽郡　碇ヶ関村</option>
+                <option value="381">北津軽郡　板柳町</option>
+                <option value="382">北津軽郡　金木町</option>
+                <option value="383">北津軽郡　中里町</option>
+                <option value="384">北津軽郡　鶴田町</option>
+                <option value="385">北津軽郡　市浦村</option>
+                <option value="386">北津軽郡　小泊村</option>
+                <option value="387">北津軽郡　中泊町</option>
+                <option value="401">上北郡　野辺地町</option>
+                <option value="402">上北郡　七戸町</option>
+                <option value="403">上北郡　百石町</option>
+                <option value="404">上北郡　十和田湖町</option>
+                <option value="405">上北郡　六戸町</option>
+                <option value="406">上北郡　横浜町</option>
+                <option value="407">上北郡　上北町</option>
+                <option value="408">上北郡　東北町</option>
+                <option value="409">上北郡　天間林村</option>
+                <option value="410">上北郡　下田町</option>
+                <option value="411">上北郡　六ヶ所村</option>
+                <option value="412">上北郡　おいらせ町</option>
+                <option value="421">下北郡　川内町</option>
+                <option value="422">下北郡　大畑町</option>
+                <option value="423">下北郡　大間町</option>
+                <option value="424">下北郡　東通村</option>
+                <option value="425">下北郡　風間浦村</option>
+                <option value="426">下北郡　佐井村</option>
+                <option value="427">下北郡　脇野沢村</option>
+                <option value="441">三戸郡　三戸町</option>
+                <option value="442">三戸郡　五戸町</option>
+                <option value="443">三戸郡　田子町</option>
+                <option value="444">三戸郡　名川町</option>
+                <option value="445">三戸郡　南部町</option>
+                <option value="446">三戸郡　階上町</option>
+                <option value="447">三戸郡　福地村</option>
+                <option value="448">三戸郡　南郷村</option>
+                <option value="449">三戸郡　倉石村</option>
+                <option value="450">三戸郡　新郷村</option>
+            </select>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <button class="btn btn-submit">
+                Submit
+            </button>
+        </div>
+    </div>
+    
+    
+    
+    <p>講ワキノト多資テリイモ写64部ウカリレ済祝頻げき夜年しろびつ朝消ク県難ヲワ現顔オヤヲモ法賠げみる社下ごおちさ豊公贈岡確んめほ。併知つフえけ正師ー放黒ドちぱ作玉ざ沖策ミレタ前田ょづ手以マメコ話仕ワミノレ範経9性サス通明ッゆまイ准一よすひレ約18償暴0室ス境傘忌昆瑞こ。結報ヱ著投んる病無フれい景問ド一通ぐざり革章57会ネ募情為色ヒ意嗅尽措祖ゅね。</p>
+
+    <p>識ど九百ルフシマ極毎アス旅1勝作袋レヱ暮63辺ヤナ北90地ル続起イわだ開立フ後調崎ご。加ず無止八ぶ戦48段セムホコ察安エワツヘ減文視べぱぜお蓄秀ぜに田行お律均ル運徒ラエ総両損住描刈ルわまら。聞が京日はな明由いば招扱セオムフ報端間へゃ集1本オトヱユ機家ヌ属別て端思まぽ第聞トホ悪犬元サ記新ょ大少ソイラ峰棋ゃ銀川サキハ共東ぐせ見高拡盛秀そイぐち。</p>
+
+    <p>資ドよ愛康ど未習ヨツ聞磯載スオ格崎経ぴきン形応けイ欲97販ホルハ社連コヱ学画メノ子読著質マラム機的フユノハ告新ム全沖鹿期ひ。峰をトぱつ能間ノナヲ氏陸ヲテヤモ長終しイろ研率クべ見所ぞたつご右紙働もる提特フナア要紹ろーか時発暮ワロソ覧育も省鎌9一イびすう無65日導な文割かみルさ。</p>
+
+    <p>住クゃ員要団タレ代4文ろ練詳山ケミニキ間読条ずでク悦9輪手伝ヲス公79泳リウ調青若きぶ投智湾げ。刊ぴ拳供ほ際転らスつし医郎ソオ結止あぽばず入州受ヘナ都済どやばっ策補タ銀捕健に暮母ぞへ更学リ第8読シイ栽選カサ購芸ど気松ナシワ戦偶凝峡拾ンせルほ。</p>
+
+    <p>黒アコ記利カサヨア反最とレ質川レゆ真中カミロツ多考ぶび育切がね域高エ育他ルネヤチ例最ぼょ化州中石作わ表12連にわな近負ナコヱ真京ずげ健曜権質群りへな。電己イオケナ保通ク健接オハウ無教くちぎ視勢活響ネセ部保ね能下ノ過設事サソホ関才そ図93憲7会どしね岡泌ご質81帳懸ぽスおド。</p>
+
+    <p>木ド要当チフヤケ家年ょべ例広ドどフけ場属上囲ハ逮全きッし察軒せ困両ん治8稿ム碁刊ロ公竹52設かへン捉売ぽク良泣融てと。毎んぴぱ障発ひぶく会楽ト年実経よ農23発ホ道毛す企百ょ磨全ケホ読棋米ゅこび玉康歯フつてレ。木チヤフ応面ハイ月発ふッぐお学関ヌナ者世セネタ話猿ユフエラ機係ッ転着フ塊東課8美カトアフ今社ヱフ盟読ト百着ゃ整卸呪娯嬉ふき。</p>
+
+    <p>17裁ただそっ智暮控ヒ科紙ね位与モ真学ケ美情れちろぞ世敬ケエ感新ぎじわそ異安クカ広況走ネト術跳ツヌト咲南ざぱ渡国春レざン無協与マヒアヤ一升もぼた。無5思ケオヱヒ加分いぼゅぴ神61午トどびを静無せ回辞測いゃあ鳥情へろ展成聞エヒマ下外エツロケ下強ーべり第資ク著必えッ献恵ぐもふさ人故在乗えがまぐ。</p>
+
+    <p>年づ席携木リじ無業優よせド池監ドレせ止中ぞしち訃年日ぞらとけ紀伴ヘソス業集ほゃ転政新テルヱオ評米併びドリ。文ツ覚表たし要二こ染理ホヨ備四アエルセ断三ヲウ古領ヌキ止見ず意16妻輪発がッじひ責像党つおら。解ゅフラ違7浦神ツタ目万ホ校禁さゃせ毎稿ヱテセチ社団ひ歌校やぜ内健響ユコマツ言5披ヌヤ融車国チモク小市く追昇岳犠ゅ。</p>
+
+    <p>飛ゃご取約う継中しーむ知禁ヘカラタ引見がかゃよ作予ワ政予レオ斎択めつンや話読者ヌサ始件涼やひえト。著カテヘ玲78顔詳シ転注ぽらな腹自ろイみあ何布ルシケホ那囲武セテル就方ずだぜさ南田たせよ時愛ムト転光テ方学療ヨハ画景忘礎郷らっかク。5食がごドり続夜フょんや訪真やンで誤4催どけくき紙情イろっ鉄思エロノ法現テナ帳塾かね年制内後っ先格ニソア記国ヒ学開晶知配づふだ。</p>
+
+    <p>利都つゅちほ照作ムヲロヱ小岡暮チ手導ヌサ志立リせりイ申62炭熟耳預4業ぶめ発上チクエノ済士ワスナト鮮集ふべに務線さ善雄邸運世ヘオレ後14谷悪ー。追ぶめ苦賞キセオ校目クめべ親代えスいど替油あ人試ぎ律不身ずトう病7格さ縄苦ろ隣下ど万新テヘシヤ波情ロユノ読長ざべへ県豊ノヒアイ茨載サセアケ強反念若ほいゃ。</p>
+</div>
+<div class="select-modal" id="select_popup_modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+        </div>
+    </div>
+</div>
+<div class="modal-backdrop"></div>
+</body>
+</html>
